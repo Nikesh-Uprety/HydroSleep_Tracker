@@ -12,9 +12,7 @@ app.use(cors());
 app.use('/api', createProxyMiddleware({
   target: `http://localhost:${BACKEND_PORT}`,
   changeOrigin: true,
-  pathRewrite: {
-    '^/api': '/api'
-  },
+  pathRewrite: (path) => `/api${path}`,
   onError: (err, req, res) => {
     console.error('Backend proxy error:', err.message);
     res.status(502).json({ error: 'Backend service unavailable' });

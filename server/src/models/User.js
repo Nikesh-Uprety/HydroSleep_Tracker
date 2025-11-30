@@ -29,11 +29,10 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function() {
   if (!this.displayName) {
     this.displayName = this.name;
   }
-  next();
 });
 
 userSchema.methods.toJSON = function() {

@@ -15,8 +15,11 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 
 ### Tech Stack
 - **Frontend**: React Native with Expo SDK 54
+- **Backend**: Node.js with Express.js
+- **Database**: MongoDB Atlas
+- **Authentication**: JWT with bcrypt password hashing
 - **Navigation**: React Navigation 7 (Bottom Tabs + Native Stack)
-- **State Management**: React Context API
+- **State Management**: React Context API with API service layer
 - **Styling**: React Native StyleSheet with theme constants
 - **Animations**: React Native Reanimated
 - **Charts**: React Native SVG
@@ -125,23 +128,29 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 
 See `design_guidelines.md` for complete design specifications.
 
-## API (In-Memory)
+## Backend API
 
-Since this is a frontend-only prototype, all data is managed through React Context:
+The app uses a REST API with MongoDB Atlas for persistent storage.
 
-### User Profile
-- `updateProfile(displayName, email)` - Update user info
-- `updatePassword(currentPassword, newPassword)` - Change password
-- `updateProfileImage(imageUrl)` - Set profile image URI
-- `logout()` - Clear user session
-
-### Goals
-- `updateGoal(id, value)` - Update goal target
-- `addGoal(label, value, unit)` - Create custom goal
-- `removeGoal(id)` - Delete custom goal (non-default only)
-
-### Analytics
-- `getAnalyticsSummary()` - Get weekly stats for charts
+### API Endpoints
+- `POST /api/auth/register` - Create new account
+- `POST /api/auth/login` - Login and get JWT token
+- `GET /api/user/me` - Get current user profile
+- `PUT /api/user/me` - Update profile
+- `PUT /api/user/me/password` - Change password
+- `PUT /api/user/me/avatar` - Update profile image
+- `GET /api/goals` - Get all goals
+- `POST /api/goals` - Create custom goal
+- `PUT /api/goals/:id` - Update goal value
+- `DELETE /api/goals/:id` - Delete custom goal
+- `GET /api/water/today` - Get today's water intake
+- `GET /api/water/week` - Get weekly water data
+- `POST /api/water` - Add water intake
+- `GET /api/sleep/latest` - Get latest sleep entry
+- `GET /api/sleep/week` - Get weekly sleep data
+- `POST /api/sleep` - Add sleep entry
+- `GET /api/dashboard/summary` - Get dashboard data
+- `GET /api/analytics/summary` - Get analytics data
 
 ## Running the App
 
@@ -151,8 +160,37 @@ npm run dev
 
 The app runs on port 5000 for web preview. Scan the QR code with Expo Go to test on physical devices.
 
+### Seeding Test Data
+
+To populate the database with dummy users and data:
+```bash
+npm run seed
+```
+
+This creates 10 test users with water logs and sleep entries.
+
+## Test Accounts
+
+Password for all accounts: `password123`
+
+| Email | Name |
+|-------|------|
+| alice@example.com | Alice Johnson |
+| bob@example.com | Bob Smith |
+| carol@example.com | Carol Davis |
+| david@example.com | David Wilson |
+| emma@example.com | Emma Brown |
+| frank@example.com | Frank Miller |
+| grace@example.com | Grace Lee |
+| henry@example.com | Henry Taylor |
+| ivy@example.com | Ivy Anderson |
+| jack@example.com | Jack Thomas |
+
 ## Recent Changes
 
+- **Nov 30, 2025**: Added database seed script with 10 dummy users
+- **Nov 30, 2025**: Fixed proxy configuration for API routing
+- **Nov 30, 2025**: Connected frontend to MongoDB Atlas backend
 - **Nov 30, 2025**: Added Account/Profile screen with image picker, edit profile, change password, and logout
 - **Nov 30, 2025**: Enhanced Goals with custom goal creation and deletion
 - **Nov 30, 2025**: Added Analytics dashboard with sleep, water, and goal charts

@@ -13,7 +13,8 @@
     "web": "npx --yes expo start --web --non-interactive",
     "lint": "npx expo lint",
     "check:format": "prettier --check \"**/*.{js,ts,tsx,css,json}\"",
-    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\""
+    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\"",
+    "seed": "node server/src/scripts/seed.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
