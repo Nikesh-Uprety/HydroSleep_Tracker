@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Modal, TextInput, Alert } from "react-native";
+import { View, StyleSheet, Pressable, Modal, TextInput, Alert, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -122,6 +122,7 @@ export default function GoalsScreen() {
   const { theme } = useTheme();
   const { goals, updateGoal, addGoal, removeGoal } = useApp();
   const [modalType, setModalType] = useState<ModalType>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [editingGoal, setEditingGoal] = useState<{
     id: string;
     label: string;
@@ -148,13 +149,24 @@ export default function GoalsScreen() {
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingGoal) {
       const value = parseInt(editingGoal.value) || 0;
       if (value > 0) {
-        updateGoal(editingGoal.id, value);
-        setModalType(null);
-        setEditingGoal(null);
+        setIsLoading(true);
+        try {
+          const result = await updateGoal(editingGoal.id, value);
+          if (result.success) {
+            setModalType(null);
+            setEditingGoal(null);
+          } else {
+            setError(result.error || "Failed to update goal");
+          }
+        } catch (e) {
+          setError("An error occurred. Please try again.");
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
   };
@@ -167,7 +179,7 @@ export default function GoalsScreen() {
     setModalType("add");
   };
 
-  const handleAddGoal = () => {
+  const handleAddGoal = async () => {
     setError("");
     
     if (!newLabel.trim()) {
@@ -183,8 +195,19 @@ export default function GoalsScreen() {
       return;
     }
 
-    addGoal(newLabel.trim(), parseInt(newValue), newUnit.trim());
-    setModalType(null);
+    setIsLoading(true);
+    try {
+      const result = await addGoal(newLabel.trim(), parseInt(newValue), newUnit.trim());
+      if (result.success) {
+        setModalType(null);
+      } else {
+        setError(result.error || "Failed to add goal");
+      }
+    } catch (e) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteGoal = (id: string, label: string) => {
@@ -196,7 +219,13 @@ export default function GoalsScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => removeGoal(id),
+          onPress: async () => {
+            try {
+              await removeGoal(id);
+            } catch (e) {
+              Alert.alert("Error", "Failed to delete goal");
+            }
+          },
         },
       ]
     );
@@ -284,10 +313,19 @@ export default function GoalsScreen() {
               <Pressable
                 onPress={() => setModalType(null)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={isLoading}
               >
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
             </View>
+
+            {error ? (
+              <View style={[styles.errorContainer, { backgroundColor: theme.error + "20" }]}>
+                <ThemedText type="small" style={{ color: theme.error }}>
+                  {error}
+                </ThemedText>
+              </View>
+            ) : null}
 
             <ThemedText type="body" style={styles.editLabel}>
               {editingGoal?.label}
@@ -311,13 +349,20 @@ export default function GoalsScreen() {
                 }
                 keyboardType="number-pad"
                 maxLength={3}
+                editable={!isLoading}
               />
               <ThemedText type="body" style={{ color: theme.textSecondary }}>
                 {editingGoal?.unit || ""}
               </ThemedText>
             </View>
 
-            <Button onPress={handleSaveEdit}>Save</Button>
+            <Button onPress={handleSaveEdit} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                "Save"
+              )}
+            </Button>
           </ThemedView>
         </View>
       </Modal>
@@ -335,6 +380,7 @@ export default function GoalsScreen() {
               <Pressable
                 onPress={() => setModalType(null)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={isLoading}
               >
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
@@ -365,6 +411,7 @@ export default function GoalsScreen() {
                 onChangeText={setNewLabel}
                 placeholder="e.g., Meditate, Read books"
                 placeholderTextColor={theme.textSecondary}
+                editable={!isLoading}
               />
             </View>
 
@@ -387,6 +434,7 @@ export default function GoalsScreen() {
                   placeholder="e.g., 30"
                   placeholderTextColor={theme.textSecondary}
                   keyboardType="number-pad"
+                  editable={!isLoading}
                 />
               </View>
               <View style={styles.inputHalf}>
@@ -406,11 +454,18 @@ export default function GoalsScreen() {
                   onChangeText={setNewUnit}
                   placeholder="e.g., min/day"
                   placeholderTextColor={theme.textSecondary}
+                  editable={!isLoading}
                 />
               </View>
             </View>
 
-            <Button onPress={handleAddGoal}>Add Goal</Button>
+            <Button onPress={handleAddGoal} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                "Add Goal"
+              )}
+            </Button>
           </ThemedView>
         </View>
       </Modal>

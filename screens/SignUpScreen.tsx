@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,8 +32,9 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -48,9 +50,16 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
       return;
     }
 
-    const success = signup(name, email, password);
-    if (!success) {
-      Alert.alert("Error", "Failed to create account");
+    setIsLoading(true);
+    try {
+      const result = await signup(name, email, password);
+      if (!result.success) {
+        Alert.alert("Error", result.error || "Failed to create account");
+      }
+    } catch (error) {
+      Alert.alert("Error", "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,6 +103,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
               onChangeText={setName}
               autoCapitalize="words"
               autoCorrect={false}
+              editable={!isLoading}
             />
 
             <TextInput
@@ -112,6 +122,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              editable={!isLoading}
             />
 
             <TextInput
@@ -128,6 +139,7 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              editable={!isLoading}
             />
 
             <TextInput
@@ -144,17 +156,22 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
+              editable={!isLoading}
             />
 
-            <Button onPress={handleSignUp} style={styles.button}>
-              Sign Up
+            <Button onPress={handleSignUp} style={styles.button} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                "Sign Up"
+              )}
             </Button>
 
             <View style={styles.loginContainer}>
               <ThemedText type="small" style={styles.loginText}>
                 Already have an account?{" "}
               </ThemedText>
-              <Pressable onPress={() => navigation.goBack()}>
+              <Pressable onPress={() => navigation.goBack()} disabled={isLoading}>
                 <ThemedText
                   type="small"
                   style={[styles.loginLink, { color: theme.primary }]}

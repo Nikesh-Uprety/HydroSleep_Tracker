@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -29,16 +30,24 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
-    const success = login(email, password);
-    if (!success) {
-      Alert.alert("Error", "Invalid credentials");
+    setIsLoading(true);
+    try {
+      const result = await login(email, password);
+      if (!result.success) {
+        Alert.alert("Error", result.error || "Invalid credentials");
+      }
+    } catch (error) {
+      Alert.alert("Error", "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,6 +92,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              editable={!isLoading}
             />
 
             <TextInput
@@ -99,17 +109,22 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              editable={!isLoading}
             />
 
-            <Button onPress={handleLogin} style={styles.button}>
-              Log In
+            <Button onPress={handleLogin} style={styles.button} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                "Log In"
+              )}
             </Button>
 
             <View style={styles.signupContainer}>
               <ThemedText type="small" style={styles.signupText}>
                 Don't have an account?{" "}
               </ThemedText>
-              <Pressable onPress={() => navigation.navigate("SignUp")}>
+              <Pressable onPress={() => navigation.navigate("SignUp")} disabled={isLoading}>
                 <ThemedText
                   type="small"
                   style={[styles.signupLink, { color: theme.primary }]}

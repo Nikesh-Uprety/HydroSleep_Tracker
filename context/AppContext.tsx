@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import api from "@/services/api";
 
 interface User {
   id: string;
   name: string;
   displayName: string;
   email: string;
-  password: string;
   profileImageUrl: string | null;
   createdAt: Date;
 }
@@ -55,32 +55,33 @@ interface AnalyticsSummary {
 
 interface AppContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   user: User | null;
   goals: Goal[];
   sleepEntries: SleepEntry[];
   waterLogs: WaterLog[];
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string) => boolean;
-  logout: () => void;
-  updateProfile: (displayName: string, email: string) => boolean;
-  updatePassword: (currentPassword: string, newPassword: string) => { success: boolean; error?: string };
-  updateProfileImage: (imageUrl: string) => void;
-  updateGoal: (id: string, value: number) => void;
-  addGoal: (label: string, value: number, unit: string) => void;
-  removeGoal: (id: string) => boolean;
-  addSleepEntry: (entry: Omit<SleepEntry, "id">) => void;
-  addWaterLog: (amountMl: number) => void;
+  sleepSuggestion: string;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  updateProfile: (displayName: string, email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  updateProfileImage: (imageUrl: string) => Promise<{ success: boolean; error?: string }>;
+  updateGoal: (id: string, value: number) => Promise<{ success: boolean; error?: string }>;
+  addGoal: (label: string, value: number, unit: string) => Promise<{ success: boolean; error?: string }>;
+  removeGoal: (id: string) => Promise<{ success: boolean; error?: string }>;
+  addSleepEntry: (entry: Omit<SleepEntry, "id">) => Promise<{ success: boolean; error?: string }>;
+  addWaterLog: (amountMl: number) => Promise<{ success: boolean; error?: string }>;
   getLatestSleep: () => SleepEntry | null;
   getWeeklyWater: () => { date: Date; amountMl: number }[];
   getWeeklySleep: () => { date: Date; durationMinutes: number }[];
   isWeeklyGoalMet: () => boolean;
   getTodayWater: () => number;
   getAnalyticsSummary: () => AnalyticsSummary;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-
-const generateId = () => Math.random().toString(36).substring(2, 9);
 
 const getStartOfWeek = () => {
   const now = new Date();
@@ -110,181 +111,290 @@ const DEFAULT_GOALS: Goal[] = [
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [goals, setGoals] = useState<Goal[]>(DEFAULT_GOALS);
+  const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
+  const [waterLogs, setWaterLogs] = useState<WaterLog[]>([]);
+  const [sleepSuggestion, setSleepSuggestion] = useState("Start tracking your sleep for personalized insights!");
 
-  const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>(() => {
-    const entries: SleepEntry[] = [];
-    const startOfWeek = getStartOfWeek();
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      if (date <= new Date()) {
-        entries.push({
-          id: generateId(),
-          date: new Date(date),
-          durationMinutes: Math.floor(Math.random() * 120) + 360,
-          restedPercent: Math.floor(Math.random() * 20) + 75,
-          remPercent: Math.floor(Math.random() * 10) + 20,
-          deepSleepPercent: Math.floor(Math.random() * 10) + 15,
-        });
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = await api.getToken();
+      if (token) {
+        const result = await api.getUser();
+        if (result.data) {
+          setUser({
+            ...result.data,
+            createdAt: new Date(result.data.createdAt),
+          });
+          setIsAuthenticated(true);
+          await fetchAllData();
+        }
       }
+    } catch (error) {
+      console.log("Auth check failed:", error);
+    } finally {
+      setIsLoading(false);
     }
-    return entries;
-  });
-
-  const [waterLogs, setWaterLogs] = useState<WaterLog[]>(() => {
-    const logs: WaterLog[] = [];
-    const startOfWeek = getStartOfWeek();
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      if (date <= new Date()) {
-        logs.push({
-          id: generateId(),
-          date: new Date(date),
-          amountMl: Math.floor(Math.random() * 1500) + 2000,
-        });
-      }
-    }
-    return logs;
-  });
-
-  const login = (email: string, password: string): boolean => {
-    if (email && password) {
-      setUser({
-        id: generateId(),
-        name: "Alex",
-        displayName: "Alex",
-        email: email,
-        password: password,
-        profileImageUrl: null,
-        createdAt: new Date(),
-      });
-      setIsAuthenticated(true);
-      return true;
-    }
-    return false;
   };
 
-  const signup = (name: string, email: string, password: string): boolean => {
-    if (name && email && password) {
+  const fetchAllData = useCallback(async () => {
+    try {
+      const [goalsResult, sleepResult, waterResult] = await Promise.all([
+        api.getGoals(),
+        api.getWeeklySleep(),
+        api.getWeeklyWater(),
+      ]);
+
+      if (goalsResult.data) {
+        setGoals(goalsResult.data);
+      }
+
+      if (sleepResult.data?.entries) {
+        const entries = sleepResult.data.entries
+          .filter((e: any) => e.entry)
+          .map((e: any) => ({
+            id: e.entry.id,
+            date: new Date(e.date),
+            durationMinutes: e.durationMinutes,
+            restedPercent: e.entry.restedPercent,
+            remPercent: e.entry.remPercent,
+            deepSleepPercent: e.entry.deepSleepPercent,
+          }));
+        setSleepEntries(entries);
+      }
+
+      if (waterResult.data?.entries) {
+        const logs = waterResult.data.entries
+          .filter((e: any) => e.amountMl > 0)
+          .map((e: any) => ({
+            id: e.id || `water-${e.date}`,
+            date: new Date(e.date),
+            amountMl: e.amountMl,
+          }));
+        setWaterLogs(logs);
+      }
+
+      const latestSleepResult = await api.getLatestSleep();
+      if (latestSleepResult.data?.suggestion) {
+        setSleepSuggestion(latestSleepResult.data.suggestion);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }, []);
+
+  const refreshData = useCallback(async () => {
+    await fetchAllData();
+  }, [fetchAllData]);
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.login(email, password);
+    
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
       setUser({
-        id: generateId(),
-        name: name,
-        displayName: name,
-        email: email,
-        password: password,
-        profileImageUrl: null,
-        createdAt: new Date(),
+        ...result.data.user,
+        createdAt: new Date(result.data.user.createdAt),
       });
       setIsAuthenticated(true);
-      return true;
+      await fetchAllData();
+      return { success: true };
     }
-    return false;
+
+    return { success: false, error: "Login failed" };
   };
 
-  const logout = () => {
+  const signup = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.register(name, email, password);
+    
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
+      setUser({
+        ...result.data.user,
+        createdAt: new Date(result.data.user.createdAt),
+      });
+      setIsAuthenticated(true);
+      await fetchAllData();
+      return { success: true };
+    }
+
+    return { success: false, error: "Signup failed" };
+  };
+
+  const logout = async () => {
+    await api.logout();
     setUser(null);
     setIsAuthenticated(false);
     setGoals(DEFAULT_GOALS);
+    setSleepEntries([]);
+    setWaterLogs([]);
   };
 
-  const updateProfile = (displayName: string, email: string): boolean => {
-    if (!user) return false;
-    if (!displayName.trim() || !email.trim()) return false;
+  const updateProfile = async (displayName: string, email: string): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.updateProfile(displayName, email);
     
-    setUser({
-      ...user,
-      displayName: displayName.trim(),
-      email: email.trim(),
-    });
-    return true;
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
+      setUser({
+        ...result.data,
+        createdAt: new Date(result.data.createdAt),
+      });
+      return { success: true };
+    }
+
+    return { success: false, error: "Update failed" };
   };
 
-  const updatePassword = (currentPassword: string, newPassword: string): { success: boolean; error?: string } => {
-    if (!user) return { success: false, error: "Not logged in" };
+  const updatePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.updatePassword(currentPassword, newPassword);
     
-    if (currentPassword !== user.password) {
-      return { success: false, error: "Current password is incorrect" };
+    if (result.error) {
+      return { success: false, error: result.error };
     }
-    
-    if (newPassword.length < 6) {
-      return { success: false, error: "New password must be at least 6 characters" };
-    }
-    
-    setUser({
-      ...user,
-      password: newPassword,
-    });
+
     return { success: true };
   };
 
-  const updateProfileImage = (imageUrl: string) => {
-    if (!user) return;
-    setUser({
-      ...user,
-      profileImageUrl: imageUrl,
-    });
-  };
-
-  const updateGoal = (id: string, value: number) => {
-    setGoals((prev) =>
-      prev.map((goal) => (goal.id === id ? { ...goal, value } : goal))
-    );
-  };
-
-  const addGoal = (label: string, value: number, unit: string) => {
-    const newGoal: Goal = {
-      id: generateId(),
-      type: "custom",
-      label: label.trim(),
-      value,
-      unit: unit.trim(),
-      isDefault: false,
-    };
-    setGoals((prev) => [...prev, newGoal]);
-  };
-
-  const removeGoal = (id: string): boolean => {
-    const goal = goals.find((g) => g.id === id);
-    if (!goal || goal.isDefault) return false;
+  const updateProfileImage = async (imageUrl: string): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.updateAvatar(imageUrl);
     
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
+      setUser({
+        ...result.data,
+        createdAt: new Date(result.data.createdAt),
+      });
+      return { success: true };
+    }
+
+    return { success: false, error: "Update failed" };
+  };
+
+  const updateGoal = async (id: string, value: number): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.updateGoal(id, value);
+    
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
+      setGoals((prev) =>
+        prev.map((goal) => (goal.id === id ? { ...goal, value } : goal))
+      );
+      return { success: true };
+    }
+
+    return { success: false, error: "Update failed" };
+  };
+
+  const addGoal = async (label: string, value: number, unit: string): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.createGoal(label, value, unit);
+    
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    if (result.data) {
+      setGoals((prev) => [...prev, result.data]);
+      return { success: true };
+    }
+
+    return { success: false, error: "Create failed" };
+  };
+
+  const removeGoal = async (id: string): Promise<{ success: boolean; error?: string }> => {
+    const goal = goals.find((g) => g.id === id);
+    if (!goal || goal.isDefault) {
+      return { success: false, error: "Cannot delete default goals" };
+    }
+
+    const result = await api.deleteGoal(id);
+    
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
     setGoals((prev) => prev.filter((g) => g.id !== id));
-    return true;
+    return { success: true };
   };
 
-  const addSleepEntry = (entry: Omit<SleepEntry, "id">) => {
-    const existingEntry = sleepEntries.find((e) => isSameDay(e.date, entry.date));
-    if (existingEntry) {
-      setSleepEntries((prev) =>
-        prev.map((e) =>
-          e.id === existingEntry.id ? { ...entry, id: e.id } : e
-        )
-      );
-    } else {
-      setSleepEntries((prev) => [{ ...entry, id: generateId() }, ...prev]);
+  const addSleepEntry = async (entry: Omit<SleepEntry, "id">): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.addSleep({
+      date: entry.date.toISOString(),
+      durationMinutes: entry.durationMinutes,
+      restedPercent: entry.restedPercent,
+      remPercent: entry.remPercent,
+      deepSleepPercent: entry.deepSleepPercent,
+    });
+    
+    if (result.error) {
+      return { success: false, error: result.error };
     }
+
+    if (result.data) {
+      const existingEntry = sleepEntries.find((e) => isSameDay(e.date, entry.date));
+      if (existingEntry) {
+        setSleepEntries((prev) =>
+          prev.map((e) =>
+            e.id === existingEntry.id ? { ...entry, id: e.id } : e
+          )
+        );
+      } else {
+        setSleepEntries((prev) => [{ ...entry, id: result.data.id }, ...prev]);
+      }
+      return { success: true };
+    }
+
+    return { success: false, error: "Add failed" };
   };
 
-  const addWaterLog = (amountMl: number) => {
-    const today = new Date();
-    const existingLog = waterLogs.find((log) => isSameDay(log.date, today));
-
-    if (existingLog) {
-      setWaterLogs((prev) =>
-        prev.map((log) =>
-          log.id === existingLog.id
-            ? { ...log, amountMl: log.amountMl + amountMl }
-            : log
-        )
-      );
-    } else {
-      setWaterLogs((prev) => [
-        ...prev,
-        { id: generateId(), date: today, amountMl },
-      ]);
+  const addWaterLog = async (amountMl: number): Promise<{ success: boolean; error?: string }> => {
+    const result = await api.addWater(amountMl);
+    
+    if (result.error) {
+      return { success: false, error: result.error };
     }
+
+    if (result.data) {
+      const today = new Date();
+      const existingLog = waterLogs.find((log) => isSameDay(log.date, today));
+
+      if (existingLog) {
+        setWaterLogs((prev) =>
+          prev.map((log) =>
+            log.id === existingLog.id
+              ? { ...log, amountMl: result.data.amountMl }
+              : log
+          )
+        );
+      } else {
+        setWaterLogs((prev) => [
+          ...prev,
+          { id: result.data.id, date: today, amountMl: result.data.amountMl },
+        ]);
+      }
+      return { success: true };
+    }
+
+    return { success: false, error: "Add failed" };
   };
 
   const getLatestSleep = (): SleepEntry | null => {
@@ -432,10 +542,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AppContext.Provider
       value={{
         isAuthenticated,
+        isLoading,
         user,
         goals,
         sleepEntries,
         waterLogs,
+        sleepSuggestion,
         login,
         signup,
         logout,
@@ -453,6 +565,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isWeeklyGoalMet,
         getTodayWater,
         getAnalyticsSummary,
+        refreshData,
       }}
     >
       {children}

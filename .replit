@@ -95,3 +95,8 @@ value = "1"
 path = "/*"
 name = "expo-sfv-version"
 value = "0"
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET = "ee3c3d87516f71f143b262bee160214ffc0f766c808ad6a9c1fe223e2c20c641"

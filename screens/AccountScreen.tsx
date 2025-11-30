@@ -7,6 +7,7 @@ import {
   TextInput,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -25,6 +26,7 @@ export default function AccountScreen() {
   const { theme } = useTheme();
   const { user, logout, updateProfile, updatePassword, updateProfileImage } = useApp();
   const [modalType, setModalType] = useState<ModalType>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -54,11 +56,18 @@ export default function AccountScreen() {
     });
 
     if (!result.canceled && result.assets[0]) {
-      updateProfileImage(result.assets[0].uri);
+      setIsLoading(true);
+      try {
+        await updateProfileImage(result.assets[0].uri);
+      } catch (e) {
+        Alert.alert("Error", "Failed to update profile image");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!displayName.trim()) {
       setError("Display name is required");
       return;
@@ -68,16 +77,23 @@ export default function AccountScreen() {
       return;
     }
 
-    const success = updateProfile(displayName.trim(), email.trim());
-    if (success) {
-      setModalType(null);
-      setError("");
-    } else {
-      setError("Failed to update profile");
+    setIsLoading(true);
+    try {
+      const result = await updateProfile(displayName.trim(), email.trim());
+      if (result.success) {
+        setModalType(null);
+        setError("");
+      } else {
+        setError(result.error || "Failed to update profile");
+      }
+    } catch (e) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setError("");
     
     if (!currentPassword) {
@@ -93,16 +109,23 @@ export default function AccountScreen() {
       return;
     }
 
-    const result = updatePassword(currentPassword, newPassword);
-    if (result.success) {
-      setModalType(null);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setError("");
-      Alert.alert("Success", "Password updated successfully");
-    } else {
-      setError(result.error || "Failed to update password");
+    setIsLoading(true);
+    try {
+      const result = await updatePassword(currentPassword, newPassword);
+      if (result.success) {
+        setModalType(null);
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setError("");
+        Alert.alert("Success", "Password updated successfully");
+      } else {
+        setError(result.error || "Failed to update password");
+      }
+    } catch (e) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,7 +135,7 @@ export default function AccountScreen() {
       "Are you sure you want to log out?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Log Out", style: "destructive", onPress: logout },
+        { text: "Log Out", style: "destructive", onPress: () => logout() },
       ]
     );
   };
@@ -143,7 +166,7 @@ export default function AccountScreen() {
   return (
     <ScreenKeyboardAwareScrollView>
       <View style={styles.profileSection}>
-        <Pressable onPress={handlePickImage} style={styles.avatarContainer}>
+        <Pressable onPress={handlePickImage} style={styles.avatarContainer} disabled={isLoading}>
           {user?.profileImageUrl ? (
             <Image
               source={{ uri: user.profileImageUrl }}
@@ -231,6 +254,7 @@ export default function AccountScreen() {
               <Pressable
                 onPress={() => setModalType(null)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={isLoading}
               >
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
@@ -261,6 +285,7 @@ export default function AccountScreen() {
                 onChangeText={setDisplayName}
                 placeholder="Enter your name"
                 placeholderTextColor={theme.textSecondary}
+                editable={!isLoading}
               />
             </View>
 
@@ -283,10 +308,17 @@ export default function AccountScreen() {
                 placeholderTextColor={theme.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                editable={!isLoading}
               />
             </View>
 
-            <Button onPress={handleSaveProfile}>Save Changes</Button>
+            <Button onPress={handleSaveProfile} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
           </ThemedView>
         </View>
       </Modal>
@@ -304,6 +336,7 @@ export default function AccountScreen() {
               <Pressable
                 onPress={() => setModalType(null)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={isLoading}
               >
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
@@ -335,6 +368,7 @@ export default function AccountScreen() {
                 placeholder="Enter current password"
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry
+                editable={!isLoading}
               />
             </View>
 
@@ -356,6 +390,7 @@ export default function AccountScreen() {
                 placeholder="Enter new password"
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry
+                editable={!isLoading}
               />
             </View>
 
@@ -377,10 +412,17 @@ export default function AccountScreen() {
                 placeholder="Confirm new password"
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry
+                editable={!isLoading}
               />
             </View>
 
-            <Button onPress={handleChangePassword}>Update Password</Button>
+            <Button onPress={handleChangePassword} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                "Update Password"
+              )}
+            </Button>
           </ThemedView>
         </View>
       </Modal>

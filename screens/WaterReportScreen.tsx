@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Modal } from "react-native";
+import { View, StyleSheet, Pressable, Modal, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -65,6 +65,7 @@ export default function WaterReportScreen() {
   const { getWeeklyWater, isWeeklyGoalMet, addWaterLog, goals, getTodayWater } =
     useApp();
   const [modalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const weeklyData = getWeeklyWater();
   const goalMet = isWeeklyGoalMet();
@@ -79,9 +80,16 @@ export default function WaterReportScreen() {
 
   const today = new Date().getDay();
 
-  const handleQuickAdd = (amount: number) => {
-    addWaterLog(amount);
-    setModalVisible(false);
+  const handleQuickAdd = async (amount: number) => {
+    setIsLoading(true);
+    try {
+      await addWaterLog(amount);
+      setModalVisible(false);
+    } catch (e) {
+      console.error("Failed to add water:", e);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -164,7 +172,7 @@ export default function WaterReportScreen() {
       >
         <Pressable
           style={styles.modalOverlay}
-          onPress={() => setModalVisible(false)}
+          onPress={() => !isLoading && setModalVisible(false)}
         >
           <ThemedView style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -172,29 +180,36 @@ export default function WaterReportScreen() {
               <Pressable
                 onPress={() => setModalVisible(false)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={isLoading}
               >
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
             </View>
 
-            <View style={styles.quickAddGrid}>
-              {[250, 500, 750, 1000].map((amount) => (
-                <Pressable
-                  key={amount}
-                  onPress={() => handleQuickAdd(amount)}
-                  style={({ pressed }) => [
-                    styles.quickAddButton,
-                    { backgroundColor: theme.backgroundDefault },
-                    pressed && { opacity: 0.7 },
-                  ]}
-                >
-                  <Feather name="droplet" size={20} color={theme.primary} />
-                  <ThemedText type="body" style={{ fontWeight: "600" }}>
-                    {amount}ml
-                  </ThemedText>
-                </Pressable>
-              ))}
-            </View>
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color={theme.primary} size="large" />
+              </View>
+            ) : (
+              <View style={styles.quickAddGrid}>
+                {[250, 500, 750, 1000].map((amount) => (
+                  <Pressable
+                    key={amount}
+                    onPress={() => handleQuickAdd(amount)}
+                    style={({ pressed }) => [
+                      styles.quickAddButton,
+                      { backgroundColor: theme.backgroundDefault },
+                      pressed && { opacity: 0.7 },
+                    ]}
+                  >
+                    <Feather name="droplet" size={20} color={theme.primary} />
+                    <ThemedText type="body" style={{ fontWeight: "600" }}>
+                      {amount}ml
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </ThemedView>
         </Pressable>
       </Modal>
@@ -284,6 +299,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.xl,
+  },
+  loadingContainer: {
+    padding: Spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
   },
   quickAddGrid: {
     flexDirection: "row",

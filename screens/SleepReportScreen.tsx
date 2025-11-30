@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Modal, TextInput, Pressable } from "react-native";
+import { View, StyleSheet, Modal, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
@@ -43,10 +43,11 @@ function StatCircle({
 
 export default function SleepReportScreen() {
   const { theme } = useTheme();
-  const { getLatestSleep, addSleepEntry } = useApp();
+  const { getLatestSleep, addSleepEntry, sleepSuggestion } = useApp();
   const [modalVisible, setModalVisible] = useState(false);
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const latestSleep = getLatestSleep();
 
@@ -55,22 +56,37 @@ export default function SleepReportScreen() {
     : 0;
   const sleepMins = latestSleep ? latestSleep.durationMinutes % 60 : 0;
 
-  const handleLogSleep = () => {
+  const handleLogSleep = async () => {
     const h = parseInt(hours) || 0;
     const m = parseInt(minutes) || 0;
     const totalMinutes = h * 60 + m;
 
-    if (totalMinutes > 0) {
-      addSleepEntry({
+    if (totalMinutes <= 0) {
+      Alert.alert("Error", "Please enter a valid sleep duration");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await addSleepEntry({
         date: new Date(),
         durationMinutes: totalMinutes,
         restedPercent: Math.floor(Math.random() * 20) + 75,
         remPercent: Math.floor(Math.random() * 15) + 20,
         deepSleepPercent: Math.floor(Math.random() * 10) + 15,
       });
-      setModalVisible(false);
-      setHours("");
-      setMinutes("");
+
+      if (result.success) {
+        setModalVisible(false);
+        setHours("");
+        setMinutes("");
+      } else {
+        Alert.alert("Error", result.error || "Failed to log sleep");
+      }
+    } catch (e) {
+      Alert.alert("Error", "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -148,8 +164,7 @@ export default function SleepReportScreen() {
               type="small"
               style={{ color: theme.textSecondary, lineHeight: 20 }}
             >
-              A consistent sleep schedule helps your body recover. Try to go to
-              bed and wake up at the same time every day.
+              {sleepSuggestion}
             </ThemedText>
           </View>
         </View>
@@ -168,6 +183,7 @@ export default function SleepReportScreen() {
               <Pressable
                 onPress={() => setModalVisible(false)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                disabled={isLoading}
               >
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
@@ -194,6 +210,7 @@ export default function SleepReportScreen() {
                   value={hours}
                   onChangeText={setHours}
                   maxLength={2}
+                  editable={!isLoading}
                 />
                 <ThemedText type="small">Hours</ThemedText>
               </View>
@@ -214,12 +231,19 @@ export default function SleepReportScreen() {
                   value={minutes}
                   onChangeText={setMinutes}
                   maxLength={2}
+                  editable={!isLoading}
                 />
                 <ThemedText type="small">Minutes</ThemedText>
               </View>
             </View>
 
-            <Button onPress={handleLogSleep}>Save</Button>
+            <Button onPress={handleLogSleep} disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                "Save"
+              )}
+            </Button>
           </ThemedView>
         </View>
       </Modal>
