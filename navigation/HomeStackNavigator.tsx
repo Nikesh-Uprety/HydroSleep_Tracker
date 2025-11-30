@@ -1,15 +1,13 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import HomeScreen from "@/screens/HomeScreen";
-import DetailScreen from "@/screens/DetailScreen";
+import DashboardScreen from "@/screens/DashboardScreen";
+import SleepReportScreen from "@/screens/SleepReportScreen";
+import WaterReportScreen from "@/screens/WaterReportScreen";
+import GoalsScreen from "@/screens/GoalsScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
 import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
-
-export type HomeStackParamList = {
-  Home: undefined;
-  Detail: undefined;
-};
+import { HomeStackParamList } from "@/types/navigation";
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
@@ -23,16 +21,32 @@ export default function HomeStackNavigator() {
       }}
     >
       <Stack.Screen
-        name="Home"
-        component={HomeScreen}
+        name="Dashboard"
+        component={DashboardScreen}
         options={{
-          headerTitle: () => <HeaderTitle title="My App" />,
+          headerTitle: () => <HeaderTitle title="Dashboard" />,
         }}
       />
       <Stack.Screen
-        name="Detail"
-        component={DetailScreen}
-        options={{ headerTitle: "Detail" }}
+        name="SleepReport"
+        component={SleepReportScreen}
+        options={{
+          headerTitle: "Sleep Report",
+        }}
+      />
+      <Stack.Screen
+        name="WaterReport"
+        component={WaterReportScreen}
+        options={{
+          headerTitle: "Water Report",
+        }}
+      />
+      <Stack.Screen
+        name="Goals"
+        component={GoalsScreen}
+        options={{
+          headerTitle: "Goals",
+        }}
       />
     </Stack.Navigator>
   );

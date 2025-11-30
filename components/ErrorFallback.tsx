@@ -59,11 +59,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
 
       <View style={styles.content}>
         <ThemedText type="h1" style={styles.title}>
-          Something went wrong
+          Oops! Time to Hydrate
         </ThemedText>
 
         <ThemedText type="body" style={styles.message}>
-          Please reload the app to continue.
+          HydroSleep Tracker needs a quick refresh. Tap below to get back to tracking your health.
         </ThemedText>
 
         <Pressable

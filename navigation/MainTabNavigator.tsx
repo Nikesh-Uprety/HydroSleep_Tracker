@@ -4,13 +4,11 @@ import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
-import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
+import WaterStackNavigator from "@/navigation/WaterStackNavigator";
+import SleepStackNavigator from "@/navigation/SleepStackNavigator";
+import GoalsStackNavigator from "@/navigation/GoalsStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
-
-export type MainTabParamList = {
-  HomeTab: undefined;
-  ProfileTab: undefined;
-};
+import { MainTabParamList } from "@/types/navigation";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -54,12 +52,32 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStackNavigator}
+        name="WaterTab"
+        component={WaterStackNavigator}
         options={{
-          title: "Profile",
+          title: "Water",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
+            <Feather name="droplet" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="SleepTab"
+        component={SleepStackNavigator}
+        options={{
+          title: "Sleep",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="moon" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="GoalsTab"
+        component={GoalsStackNavigator}
+        options={{
+          title: "Goals",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="target" size={size} color={color} />
           ),
         }}
       />

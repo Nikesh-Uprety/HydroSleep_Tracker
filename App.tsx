@@ -7,22 +7,32 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import MainTabNavigator from "@/navigation/MainTabNavigator";
+import AuthStackNavigator from "@/navigation/AuthStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AppProvider, useApp } from "@/context/AppContext";
+
+function AppNavigator() {
+  const { isAuthenticated } = useApp();
+
+  return isAuthenticated ? <MainTabNavigator /> : <AuthStackNavigator />;
+}
 
 export default function App() {
   return (
-  <ErrorBoundary>
-    <SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
         <GestureHandlerRootView style={styles.root}>
           <KeyboardProvider>
-            <NavigationContainer>
-              <MainTabNavigator />
-            </NavigationContainer>
+            <AppProvider>
+              <NavigationContainer>
+                <AppNavigator />
+              </NavigationContainer>
+            </AppProvider>
             <StatusBar style="auto" />
           </KeyboardProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
-  </ErrorBoundary>
+    </ErrorBoundary>
   );
 }
 
