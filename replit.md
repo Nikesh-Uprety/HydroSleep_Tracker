@@ -152,6 +152,17 @@ The app uses a REST API with MongoDB Atlas for persistent storage.
 - `GET /api/dashboard/summary` - Get dashboard data
 - `GET /api/analytics/summary` - Get analytics data
 
+## Environment Variables
+
+The app requires the following environment variables/secrets:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MONGODB_URI` | Yes | MongoDB Atlas connection string (e.g., `mongodb+srv://user:pass@cluster.mongodb.net/dbname`) |
+| `JWT_SECRET` | Yes | Secret key for JWT token signing |
+
+You can get a free MongoDB database from [MongoDB Atlas](https://mongodb.com/atlas).
+
 ## Running the App
 
 ```bash
@@ -188,6 +199,7 @@ Password for all accounts: `password123`
 
 ## Recent Changes
 
+- **Nov 30, 2025**: Fixed delete goals error handling - now properly checks API response and displays errors
 - **Nov 30, 2025**: Added database seed script with 10 dummy users
 - **Nov 30, 2025**: Fixed proxy configuration for API routing
 - **Nov 30, 2025**: Connected frontend to MongoDB Atlas backend
