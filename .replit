@@ -5,6 +5,14 @@ modules = ["nodejs-20", "web"]
 channel = "stable-25_05"
 
 [[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 5001
+externalPort = 3003
+
+[[ports]]
 localPort = 8081
 externalPort = 80
 
@@ -15,6 +23,10 @@ externalPort = 3000
 [[ports]]
 localPort = 36453
 externalPort = 3002
+
+[[ports]]
+localPort = 37763
+externalPort = 4200
 
 [[ports]]
 localPort = 41443
