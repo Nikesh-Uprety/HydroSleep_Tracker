@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Modal, TextInput, Alert, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Pressable, Modal, TextInput, Alert, ActivityIndicator, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -210,28 +210,38 @@ export default function GoalsScreen() {
     }
   };
 
-  const handleDeleteGoal = (id: string, label: string) => {
-    Alert.alert(
-      "Delete Goal",
-      `Are you sure you want to delete "${label}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const result = await removeGoal(id);
-              if (!result.success) {
-                Alert.alert("Error", result.error || "Failed to delete goal");
-              }
-            } catch (e) {
-              Alert.alert("Error", "Failed to delete goal. Please try again.");
-            }
-          },
-        },
-      ]
-    );
+  const handleDeleteGoal = async (id: string, label: string) => {
+    const confirmDelete = Platform.OS === "web" 
+      ? window.confirm(`Are you sure you want to delete "${label}"?`)
+      : await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            "Delete Goal",
+            `Are you sure you want to delete "${label}"?`,
+            [
+              { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+              { text: "Delete", style: "destructive", onPress: () => resolve(true) },
+            ]
+          );
+        });
+
+    if (confirmDelete) {
+      try {
+        const result = await removeGoal(id);
+        if (!result.success) {
+          if (Platform.OS === "web") {
+            window.alert(result.error || "Failed to delete goal");
+          } else {
+            Alert.alert("Error", result.error || "Failed to delete goal");
+          }
+        }
+      } catch (e) {
+        if (Platform.OS === "web") {
+          window.alert("Failed to delete goal. Please try again.");
+        } else {
+          Alert.alert("Error", "Failed to delete goal. Please try again.");
+        }
+      }
+    }
   };
 
   const getGoalIcon = (type: string): keyof typeof Feather.glyphMap => {
