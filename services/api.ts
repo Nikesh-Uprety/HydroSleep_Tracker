@@ -9,8 +9,10 @@ const getApiBaseUrl = () => {
     if (hostname.includes('replit.dev') || hostname.includes('replit.app')) {
       return `https://${hostname}/api`;
     }
+    // For web development, use proxy on port 5000
+    return `http://localhost:5000/api`;
   }
-  return 'http://localhost:5001/api';
+  return 'http://localhost:5000/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();
