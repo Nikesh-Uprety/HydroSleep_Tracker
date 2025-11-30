@@ -4,6 +4,7 @@ import DashboardScreen from "@/screens/DashboardScreen";
 import SleepReportScreen from "@/screens/SleepReportScreen";
 import WaterReportScreen from "@/screens/WaterReportScreen";
 import GoalsScreen from "@/screens/GoalsScreen";
+import AnalyticsScreen from "@/screens/AnalyticsScreen";
 import { HeaderTitle } from "@/components/HeaderTitle";
 import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
@@ -46,6 +47,13 @@ export default function HomeStackNavigator() {
         component={GoalsScreen}
         options={{
           headerTitle: "Goals",
+        }}
+      />
+      <Stack.Screen
+        name="Analytics"
+        component={AnalyticsScreen}
+        options={{
+          headerTitle: "Analytics",
         }}
       />
     </Stack.Navigator>

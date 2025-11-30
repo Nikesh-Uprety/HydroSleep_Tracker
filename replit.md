@@ -7,7 +7,9 @@ A health and habit tracking mobile app for monitoring sleep, water intake, and d
 HydroSleep Tracker is a React Native (Expo) mobile application that helps users track their:
 - **Water Intake**: Daily water consumption with weekly visualization
 - **Sleep**: Sleep duration and quality metrics (Rested %, REM %, Deep Sleep %)
-- **Goals**: Customizable daily targets for exercise, water, and sleep
+- **Goals**: Customizable daily targets for exercise, water, sleep, and custom goals
+- **Analytics**: Weekly insights with interactive charts
+- **Profile**: User account management with profile image and settings
 
 ## Project Architecture
 
@@ -17,6 +19,7 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 - **State Management**: React Context API
 - **Styling**: React Native StyleSheet with theme constants
 - **Animations**: React Native Reanimated
+- **Charts**: React Native SVG
 
 ### Folder Structure
 ```
@@ -30,6 +33,7 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 │   ├── WaterStackNavigator.tsx
 │   ├── SleepStackNavigator.tsx
 │   ├── GoalsStackNavigator.tsx
+│   ├── AccountStackNavigator.tsx
 │   └── screenOptions.ts
 ├── screens/
 │   ├── LoginScreen.tsx
@@ -37,7 +41,9 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 │   ├── DashboardScreen.tsx
 │   ├── WaterReportScreen.tsx
 │   ├── SleepReportScreen.tsx
-│   └── GoalsScreen.tsx
+│   ├── GoalsScreen.tsx
+│   ├── AnalyticsScreen.tsx
+│   └── AccountScreen.tsx
 ├── components/
 │   ├── Button.tsx
 │   ├── Card.tsx
@@ -70,7 +76,8 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 - In-memory authentication (no persistent storage in prototype)
 
 ### Dashboard
-- Personalized greeting
+- Personalized greeting showing user's display name
+- Featured Analytics card at the top
 - Navigation cards to Water, Sleep, Goals screens
 - Quick stats overview
 
@@ -87,10 +94,26 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 - Log new sleep entries
 
 ### Goals Management
-- Exercise: times per week
-- Water: liters per day
-- Sleep: hours per night
-- Tap to edit any goal
+- Three default goals (locked from deletion):
+  - Exercise Regularly - times/week
+  - Drink Water - L/day
+  - Improve Sleep - hours/night
+- Add custom goals with name, target value, and unit
+- Delete custom goals (with confirmation)
+- Tap to edit any goal's target value
+
+### Analytics Dashboard
+- Weekly Sleep chart (bar chart showing hours per day)
+- Weekly Water Intake chart (bar chart with goal line)
+- Goal Progress circle (weekly completion percentage)
+- Stats showing total goals and daily completion
+
+### Account/Profile
+- Profile image (tap to change using device camera roll)
+- Display name and email shown
+- Edit Profile modal (change name and email)
+- Change Password modal (with validation)
+- Log Out button (with confirmation)
 
 ## Design Guidelines
 
@@ -102,6 +125,24 @@ HydroSleep Tracker is a React Native (Expo) mobile application that helps users 
 
 See `design_guidelines.md` for complete design specifications.
 
+## API (In-Memory)
+
+Since this is a frontend-only prototype, all data is managed through React Context:
+
+### User Profile
+- `updateProfile(displayName, email)` - Update user info
+- `updatePassword(currentPassword, newPassword)` - Change password
+- `updateProfileImage(imageUrl)` - Set profile image URI
+- `logout()` - Clear user session
+
+### Goals
+- `updateGoal(id, value)` - Update goal target
+- `addGoal(label, value, unit)` - Create custom goal
+- `removeGoal(id)` - Delete custom goal (non-default only)
+
+### Analytics
+- `getAnalyticsSummary()` - Get weekly stats for charts
+
 ## Running the App
 
 ```bash
@@ -112,7 +153,8 @@ The app runs on port 5000 for web preview. Scan the QR code with Expo Go to test
 
 ## Recent Changes
 
-- Initial prototype implementation (Nov 30, 2025)
-- Added all core screens and navigation
-- Implemented in-memory state management
-- Created responsive UI matching mockup design
+- **Nov 30, 2025**: Added Account/Profile screen with image picker, edit profile, change password, and logout
+- **Nov 30, 2025**: Enhanced Goals with custom goal creation and deletion
+- **Nov 30, 2025**: Added Analytics dashboard with sleep, water, and goal charts
+- **Nov 30, 2025**: Updated navigation with Account tab and Analytics access
+- **Nov 30, 2025**: Initial prototype implementation

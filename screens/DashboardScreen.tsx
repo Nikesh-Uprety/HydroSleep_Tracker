@@ -25,6 +25,7 @@ interface DashboardCardProps {
   icon: keyof typeof Feather.glyphMap;
   onPress: () => void;
   theme: any;
+  highlight?: boolean;
 }
 
 const springConfig: WithSpringConfig = {
@@ -42,6 +43,7 @@ function DashboardCard({
   icon,
   onPress,
   theme,
+  highlight = false,
 }: DashboardCardProps) {
   const scale = useSharedValue(1);
 
@@ -64,29 +66,39 @@ function DashboardCard({
       onPressOut={handlePressOut}
       style={[
         styles.card,
-        { backgroundColor: theme.cardBackground },
+        { backgroundColor: highlight ? theme.primary : theme.cardBackground },
         animatedStyle,
       ]}
     >
       <View
         style={[
           styles.iconContainer,
-          { backgroundColor: theme.backgroundDefault },
+          { backgroundColor: highlight ? "rgba(255,255,255,0.2)" : theme.backgroundDefault },
         ]}
       >
-        <Feather name={icon} size={24} color={theme.primary} />
+        <Feather name={icon} size={24} color={highlight ? "#FFFFFF" : theme.primary} />
       </View>
       <View style={styles.cardContent}>
-        <ThemedText type="body" style={styles.cardTitle}>
+        <ThemedText
+          type="body"
+          style={[styles.cardTitle, highlight && { color: "#FFFFFF" }]}
+        >
           {title}
         </ThemedText>
         {subtitle ? (
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
+          <ThemedText
+            type="small"
+            style={{ color: highlight ? "rgba(255,255,255,0.8)" : theme.textSecondary }}
+          >
             {subtitle}
           </ThemedText>
         ) : null}
       </View>
-      <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+      <Feather
+        name="chevron-right"
+        size={20}
+        color={highlight ? "rgba(255,255,255,0.8)" : theme.textSecondary}
+      />
     </AnimatedPressable>
   );
 }
@@ -111,11 +123,20 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
     <ScreenScrollView>
       <View style={styles.header}>
         <ThemedText type="small" style={{ color: theme.textSecondary }}>
-          Hello, {user?.name || "Guest"}
+          Hello, {user?.displayName || user?.name || "Guest"}
         </ThemedText>
       </View>
 
       <View style={styles.cardsContainer}>
+        <DashboardCard
+          title="Analytics"
+          subtitle="View your weekly insights"
+          icon="bar-chart-2"
+          onPress={() => navigation.navigate("Analytics")}
+          theme={theme}
+          highlight
+        />
+
         <DashboardCard
           title="Water Intake"
           subtitle={`${waterProgress}% of daily goal`}
@@ -139,7 +160,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
         <DashboardCard
           title="Sleep Report"
           subtitle="View detailed analysis"
-          icon="bar-chart-2"
+          icon="pie-chart"
           onPress={() => navigation.navigate("SleepReport")}
           theme={theme}
         />

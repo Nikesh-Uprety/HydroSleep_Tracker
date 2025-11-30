@@ -8,6 +8,7 @@ export type MainTabParamList = {
   WaterTab: undefined;
   SleepTab: undefined;
   GoalsTab: undefined;
+  AccountTab: undefined;
 };
 
 export type HomeStackParamList = {
@@ -15,6 +16,7 @@ export type HomeStackParamList = {
   SleepReport: undefined;
   WaterReport: undefined;
   Goals: undefined;
+  Analytics: undefined;
 };
 
 export type WaterStackParamList = {
@@ -28,4 +30,9 @@ export type SleepStackParamList = {
 
 export type GoalsStackParamList = {
   Goals: undefined;
+};
+
+export type AccountStackParamList = {
+  Account: undefined;
+  ChangePassword: undefined;
 };

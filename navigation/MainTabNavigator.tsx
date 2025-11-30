@@ -7,6 +7,7 @@ import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import WaterStackNavigator from "@/navigation/WaterStackNavigator";
 import SleepStackNavigator from "@/navigation/SleepStackNavigator";
 import GoalsStackNavigator from "@/navigation/GoalsStackNavigator";
+import AccountStackNavigator from "@/navigation/AccountStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { MainTabParamList } from "@/types/navigation";
 
@@ -78,6 +79,16 @@ export default function MainTabNavigator() {
           title: "Goals",
           tabBarIcon: ({ color, size }) => (
             <Feather name="target" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="AccountTab"
+        component={AccountStackNavigator}
+        options={{
+          title: "Account",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="user" size={size} color={color} />
           ),
         }}
       />
