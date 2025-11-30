@@ -8,6 +8,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/context/AppContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -85,8 +86,10 @@ export default function WaterReportScreen() {
     try {
       await addWaterLog(amount);
       setModalVisible(false);
+      showSuccessToast(`Added ${amount}ml of water!`);
     } catch (e) {
       console.error("Failed to add water:", e);
+      showErrorToast("Failed to add water log");
     } finally {
       setIsLoading(false);
     }

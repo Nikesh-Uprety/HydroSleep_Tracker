@@ -19,6 +19,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/context/AppContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { showSuccessToast, showErrorToast, showInfoToast } from "@/utils/toast";
 
 type ModalType = "profile" | "password" | null;
 
@@ -37,14 +38,14 @@ export default function AccountScreen() {
 
   const handlePickImage = async () => {
     if (Platform.OS === "web") {
-      Alert.alert("Feature Unavailable", "Run in Expo Go to use this feature");
+      showInfoToast("Run in Expo Go to use this feature");
       return;
     }
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (!permissionResult.granted) {
-      Alert.alert("Permission Required", "Please grant camera roll access to change your profile image.");
+      showErrorToast("Please grant camera roll access to change your profile image.");
       return;
     }
 
@@ -59,8 +60,9 @@ export default function AccountScreen() {
       setIsLoading(true);
       try {
         await updateProfileImage(result.assets[0].uri);
+        showSuccessToast("Profile image updated!");
       } catch (e) {
-        Alert.alert("Error", "Failed to update profile image");
+        showErrorToast("Failed to update profile image");
       } finally {
         setIsLoading(false);
       }
@@ -83,6 +85,7 @@ export default function AccountScreen() {
       if (result.success) {
         setModalType(null);
         setError("");
+        showSuccessToast("Profile updated!");
       } else {
         setError(result.error || "Failed to update profile");
       }
@@ -118,7 +121,7 @@ export default function AccountScreen() {
         setNewPassword("");
         setConfirmPassword("");
         setError("");
-        Alert.alert("Success", "Password updated successfully");
+        showSuccessToast("Password changed!");
       } else {
         setError(result.error || "Failed to update password");
       }
@@ -130,9 +133,14 @@ export default function AccountScreen() {
   };
 
   const handleLogout = () => {
+    const doLogout = () => {
+      logout();
+      showSuccessToast("Logged out successfully!");
+    };
+
     if (Platform.OS === "web") {
       if (window.confirm("Are you sure you want to log out?")) {
-        logout();
+        doLogout();
       }
     } else {
       Alert.alert(
@@ -140,7 +148,7 @@ export default function AccountScreen() {
         "Are you sure you want to log out?",
         [
           { text: "Cancel", style: "cancel" },
-          { text: "Log Out", style: "destructive", onPress: () => logout() },
+          { text: "Log Out", style: "destructive", onPress: doLogout },
         ]
       );
     }

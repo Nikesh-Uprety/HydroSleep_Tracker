@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Modal, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, StyleSheet, Modal, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { ScreenScrollView } from "@/components/ScreenScrollView";
@@ -9,6 +9,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/context/AppContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 function StatCircle({
   value,
@@ -62,7 +63,7 @@ export default function SleepReportScreen() {
     const totalMinutes = h * 60 + m;
 
     if (totalMinutes <= 0) {
-      Alert.alert("Error", "Please enter a valid sleep duration");
+      showErrorToast("Please enter a valid sleep duration");
       return;
     }
 
@@ -80,11 +81,12 @@ export default function SleepReportScreen() {
         setModalVisible(false);
         setHours("");
         setMinutes("");
+        showSuccessToast("Sleep logged!");
       } else {
-        Alert.alert("Error", result.error || "Failed to log sleep");
+        showErrorToast(result.error || "Failed to log sleep");
       }
     } catch (e) {
-      Alert.alert("Error", "An error occurred. Please try again.");
+      showErrorToast("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

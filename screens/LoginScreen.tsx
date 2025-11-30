@@ -4,7 +4,6 @@ import {
   StyleSheet,
   TextInput,
   Pressable,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -19,6 +18,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/context/AppContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/types/navigation";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "Login">;
@@ -34,18 +34,20 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+      showErrorToast("Please fill in all fields");
       return;
     }
 
     setIsLoading(true);
     try {
       const result = await login(email, password);
-      if (!result.success) {
-        Alert.alert("Error", result.error || "Invalid credentials");
+      if (result.success) {
+        showSuccessToast("Login successful!");
+      } else {
+        showErrorToast(result.error || "Invalid credentials");
       }
     } catch (error) {
-      Alert.alert("Error", "An error occurred. Please try again.");
+      showErrorToast("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

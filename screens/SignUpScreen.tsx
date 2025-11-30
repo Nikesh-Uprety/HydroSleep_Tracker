@@ -4,7 +4,6 @@ import {
   StyleSheet,
   TextInput,
   Pressable,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -19,6 +18,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/context/AppContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/types/navigation";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 type SignUpScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "SignUp">;
@@ -36,28 +36,30 @@ export default function SignUpScreen({ navigation }: SignUpScreenProps) {
 
   const handleSignUp = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+      showErrorToast("Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      showErrorToast("Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
+      showErrorToast("Password must be at least 6 characters");
       return;
     }
 
     setIsLoading(true);
     try {
       const result = await signup(name, email, password);
-      if (!result.success) {
-        Alert.alert("Error", result.error || "Failed to create account");
+      if (result.success) {
+        showSuccessToast("Account created successfully!");
+      } else {
+        showErrorToast(result.error || "Failed to create account");
       }
     } catch (error) {
-      Alert.alert("Error", "An error occurred. Please try again.");
+      showErrorToast("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

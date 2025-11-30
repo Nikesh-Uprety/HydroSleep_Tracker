@@ -14,6 +14,7 @@ import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/context/AppContext";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { showSuccessToast, showErrorToast } from "@/utils/toast";
 
 const springConfig: WithSpringConfig = {
   damping: 15,
@@ -159,6 +160,7 @@ export default function GoalsScreen() {
           if (result.success) {
             setModalType(null);
             setEditingGoal(null);
+            showSuccessToast("Goal updated!");
           } else {
             setError(result.error || "Failed to update goal");
           }
@@ -200,6 +202,7 @@ export default function GoalsScreen() {
       const result = await addGoal(newLabel.trim(), parseInt(newValue), newUnit.trim());
       if (result.success) {
         setModalType(null);
+        showSuccessToast("Goal added!");
       } else {
         setError(result.error || "Failed to add goal");
       }
@@ -227,19 +230,13 @@ export default function GoalsScreen() {
     if (confirmDelete) {
       try {
         const result = await removeGoal(id);
-        if (!result.success) {
-          if (Platform.OS === "web") {
-            window.alert(result.error || "Failed to delete goal");
-          } else {
-            Alert.alert("Error", result.error || "Failed to delete goal");
-          }
+        if (result.success) {
+          showSuccessToast("Goal deleted!");
+        } else {
+          showErrorToast(result.error || "Failed to delete goal");
         }
       } catch (e) {
-        if (Platform.OS === "web") {
-          window.alert("Failed to delete goal. Please try again.");
-        } else {
-          Alert.alert("Error", "Failed to delete goal. Please try again.");
-        }
+        showErrorToast("Failed to delete goal. Please try again.");
       }
     }
   };
