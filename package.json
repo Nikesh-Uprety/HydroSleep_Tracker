@@ -3,11 +3,11 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
-    "dev": "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx expo start",
-    "start": "npx expo start",
-    "android": "npx expo start --android",
-    "ios": "npx expo start --ios",
-    "web": "npx expo start --web",
+    "dev": "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN npx --yes expo start --non-interactive",
+    "start": "npx --yes expo start --non-interactive",
+    "android": "npx --yes expo start --android --non-interactive",
+    "ios": "npx --yes expo start --ios --non-interactive",
+    "web": "npx --yes expo start --web --non-interactive",
     "lint": "npx expo lint",
     "check:format": "prettier --check \"**/*.{js,ts,tsx,css,json}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\""

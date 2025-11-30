@@ -1,8 +1,8 @@
 entrypoint = "README.md"
-modules = ["nodejs-22"]
+modules = ["nodejs-20", "web"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [[ports]]
 localPort = 8081
@@ -19,6 +19,10 @@ externalPort = 3002
 [[ports]]
 localPort = 41443
 externalPort = 3001
+
+[[ports]]
+localPort = 44283
+externalPort = 3003
 
 [workflows]
 runButton = "Project"
@@ -72,10 +76,13 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 8081
-ensurePreviewReachable = "/status"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [agent]
 stack = "EXPO"
+expertMode = true
 
 [deployment]
 deploymentTarget = "static"
