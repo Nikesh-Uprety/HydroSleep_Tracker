@@ -5,12 +5,12 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import Toast from "react-native-toast-message";
 
 import MainTabNavigator from "@/navigation/MainTabNavigator";
 import AuthStackNavigator from "@/navigation/AuthStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppProvider, useApp } from "@/context/AppContext";
+import { ToastProvider } from "@/components/Toast";
 
 function AppNavigator() {
   const { isAuthenticated } = useApp();
@@ -24,13 +24,14 @@ export default function App() {
       <SafeAreaProvider>
         <GestureHandlerRootView style={styles.root}>
           <KeyboardProvider>
-            <AppProvider>
-              <NavigationContainer>
-                <AppNavigator />
-              </NavigationContainer>
-            </AppProvider>
-            <StatusBar style="auto" />
-            <Toast />
+            <ToastProvider>
+              <AppProvider>
+                <NavigationContainer>
+                  <AppNavigator />
+                </NavigationContainer>
+              </AppProvider>
+              <StatusBar style="auto" />
+            </ToastProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
