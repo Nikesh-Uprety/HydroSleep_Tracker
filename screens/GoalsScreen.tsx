@@ -221,9 +221,12 @@ export default function GoalsScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await removeGoal(id);
+              const result = await removeGoal(id);
+              if (!result.success) {
+                Alert.alert("Error", result.error || "Failed to delete goal");
+              }
             } catch (e) {
-              Alert.alert("Error", "Failed to delete goal");
+              Alert.alert("Error", "Failed to delete goal. Please try again.");
             }
           },
         },
