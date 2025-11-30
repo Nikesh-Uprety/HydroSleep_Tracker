@@ -1,0 +1,224 @@
+You already built the initial React Native + Expo + Node.js/Express + MongoDB Atlas app from my previous “HydroSleep Tracker” prompt.
+
+Now MODIFY and EXTEND the existing codebase with the following features, without regenerating the whole project. Keep the current structure and style.
+
+================================
+GLOBAL UPDATE – TOAST NOTIFICATIONS
+================================
+Add a simple, cross-platform toast notification system in the React Native app (for example, using `react-native-toast-message` or any other free, Expo-friendly solution).
+
+Show SUCCESS toasts for:
+- Successful registration
+- Successful login
+- Successful logout
+- Successfully updated profile (username/email/avatar)
+- Successfully changed password
+- Successfully added a goal
+- Successfully updated a goal
+- Successfully deleted a goal
+- Successfully added water/sleep/log data if those features are already implemented
+
+Show ERROR toasts for:
+- Registration or login failed (e.g., invalid credentials, email already in use)
+- Wrong password while logging in
+- Wrong current password while changing password
+- Any failed API call (network error, server error, validation error)
+- Failed goal operations (add, update, delete)
+- Failed profile updates or avatar upload
+
+Implementation details:
+- Centralize toast logic in a utility or context so screens can call something like `showSuccessToast(message)` or `showErrorToast(message)`.
+- Keep messages short and user-friendly (e.g., “Login successful!”, “Incorrect password.”, “Goal deleted.” etc.).
+- Replace or supplement any existing `Alert` dialogs with toasts where appropriate.
+
+================================
+TASK 1 – ACCOUNT / PROFILE SCREEN + LOGOUT
+================================
+
+FRONTEND
+1. Add a new **Account / Profile screen**:
+   - Accessible either as:
+     - A new tab in the bottom tab bar named “Account”, OR
+     - A profile/user icon button in the top-right of the main Dashboard that navigates to the Account screen.
+   - On this screen show:
+     - User profile image (avatar)
+     - Username / display name
+     - Email
+   - Provide UI for:
+     - Upload/change profile image
+     - Edit username
+     - Edit email
+     - Change password
+     - Log out
+
+2. **Profile image handling**:
+   - Use Expo ImagePicker (or similar) to choose an image from the device.
+   - Show it in a circular avatar.
+   - On save, send the image (URL or base64, whichever is easiest for you to implement) to the backend via a dedicated endpoint.
+   - On success -> show SUCCESS toast “Profile image updated”.
+   - On failure -> show ERROR toast.
+
+3. **Edit username & email**:
+   - Simple form with validation.
+   - On Save:
+     - Call backend update endpoint.
+     - On success: update UI + show SUCCESS toast “Profile updated”.
+     - On error: show ERROR toast with the server’s message.
+
+4. **Change password**:
+   - Inputs:
+     - Current password
+     - New password
+     - Confirm new password
+   - Validate on client side (password length, match).
+   - On submit:
+     - Call backend change-password endpoint.
+     - On success: show SUCCESS toast “Password changed”.
+     - On wrong current password or other issue: show ERROR toast (e.g., “Incorrect current password”).
+
+5. **Logout button**:
+   - Prominent “Log Out” button.
+   - On tap:
+     - Clear JWT token from AsyncStorage (or whatever storage is used).
+     - Clear user state.
+     - Navigate to Auth stack (Login screen).
+     - Show SUCCESS toast “Logged out”.
+
+BACKEND
+1. Update **User model**:
+   - Fields:
+     - `displayName: string`
+     - `profileImageUrl: string` (optional)
+   - Keep timestamps.
+
+2. Add JWT-protected profile routes:
+   - `GET /user/me`
+     - Return { id, displayName or name, email, profileImageUrl, createdAt }
+   - `PUT /user/me`
+     - Update `displayName` and `email` (ensure email uniqueness).
+   - `PUT /user/me/password`
+     - Body: { currentPassword, newPassword }
+     - Verify current password using bcrypt; if correct, hash and store new password.
+   - `PUT /user/me/avatar`
+     - Accept URL or base64 string; save in `profileImageUrl`.
+
+   Return meaningful error messages for invalid operations so the frontend can display proper toasts.
+
+================================
+TASK 2 – ENHANCED GOALS: ADD & REMOVE CUSTOM GOALS
+================================
+
+GOAL BEHAVIOR
+- Keep three protected default goals:
+  - Exercise Regularly – 4x
+  - Drink Water – 3L
+  - Improve Sleep – 8h
+- Allow user to:
+  - Add additional **custom goals**
+  - Edit values of any goal
+  - Delete only NON-default goals
+
+BACKEND
+1. Extend **Goal model**:
+   - Fields:
+     - `label: string` (e.g., “Meditate”)
+     - `type: string` (e.g., 'exercise', 'water', 'sleep', 'custom')
+     - `value: number`
+     - `unit: string`
+     - `isDefault: boolean` (true for the three base goals)
+     - `userId: ObjectId` (ref User)
+
+2. Endpoints (JWT-protected):
+   - `GET /goals`
+     - Return all goals for the logged-in user.
+   - `POST /goals`
+     - Create a new custom goal with `isDefault: false` and `type: 'custom'`.
+   - `PUT /goals/:id`
+     - Update goal `value`, `unit`, `label` when applicable.
+   - `DELETE /goals/:id`
+     - Allow deletion only if `isDefault === false`; otherwise return an error.
+
+FRONTEND
+1. **Goals screen UI**:
+   - Display all goals (default + custom).
+   - Default goals:
+     - No delete icon (or greyed-out).
+   - Custom goals:
+     - Show a small delete/trash icon.
+
+2. **Add Goal flow**:
+   - “+ Add Goal” button opens a modal or screen:
+     - Inputs: label, value (number), unit (string).
+   - On submit:
+     - POST to `/goals`.
+     - On success: refresh goals list + SUCCESS toast “Goal added”.
+     - On failure: ERROR toast.
+
+3. **Update Goal flow**:
+   - Tapping a goal row opens a form to edit value/unit (and label for custom goals).
+   - On success: refresh + SUCCESS toast “Goal updated”.
+   - On failure: ERROR toast.
+
+4. **Delete Goal flow** (custom only):
+   - Confirmation dialog before delete.
+   - On success: SUCCESS toast “Goal deleted”.
+   - On failure: ERROR toast.
+
+================================
+TASK 3 – NEW ANALYTICS DASHBOARD (GRAPH VIEW)
+================================
+
+Create a new **Analytics / Insights** screen to visualize overall usage.
+
+BACKEND
+1. Add endpoint `GET /analytics/summary` (JWT-protected).
+   - Calculate stats for the last 7 days (or configurable range) per user using SleepEntry, WaterLog, and Goals.
+   - Return JSON ready for charting, e.g.:
+     {
+       "sleep": {
+         "days": [...],
+         "hours": [...],
+         "average": number
+       },
+       "water": {
+         "days": [...],
+         "liters": [...],
+         "dailyGoalLiters": number,
+         "goalMetCount": number
+       },
+       "goals": {
+         "totalGoals": number,
+         "completedToday": number,
+         "weeklyCompletionRatePercent": number
+       }
+     }
+
+FRONTEND
+1. Navigation:
+   - Add a new bottom tab “Analytics” OR a “View Analytics” card on the existing Dashboard that navigates to this screen.
+
+2. Analytics screen layout:
+   - Clean, modern design with cards for:
+     - Weekly Sleep Duration (line or area chart)
+     - Weekly Water Intake (bar chart)
+     - Goal Progress Overview (donut/pie or horizontal bar)
+   - Use a free, Expo-compatible charting approach:
+     - e.g., `react-native-chart-kit` or custom charts using `react-native-svg`.
+
+3. Behavior:
+   - On screen mount, call `GET /analytics/summary` with JWT token.
+   - On success: render charts.
+   - On failure: show ERROR toast “Could not load analytics”.
+
+================================
+GENERAL REQUIREMENTS
+================================
+- Keep code consistent with existing structure and TypeScript/JavaScript style.
+- Add/update types/interfaces where needed.
+- Maintain JWT auth flow:
+  - On successful login/registration, show SUCCESS toast and navigate to the main app.
+  - On auth failure (invalid credentials, expired token), show ERROR toast and handle gracefully.
+- Update README(s) only if necessary to mention new endpoints and screens.
+- Do NOT delete or break existing features; only extend and improve.
+
+Now apply these changes to the existing React Native + Node.js + MongoDB app and output the updated code files, integrating the toast system into all relevant flows.
