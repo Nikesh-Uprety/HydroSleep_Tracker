@@ -7,6 +7,7 @@ import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import WaterStackNavigator from "@/navigation/WaterStackNavigator";
 import SleepStackNavigator from "@/navigation/SleepStackNavigator";
 import GoalsStackNavigator from "@/navigation/GoalsStackNavigator";
+import ScreenTimeStackNavigator from "@/navigation/ScreenTimeStackNavigator";
 import AccountStackNavigator from "@/navigation/AccountStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 import { MainTabParamList } from "@/types/navigation";
@@ -79,6 +80,16 @@ export default function MainTabNavigator() {
           title: "Goals",
           tabBarIcon: ({ color, size }) => (
             <Feather name="target" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="ScreenTimeTab"
+        component={ScreenTimeStackNavigator}
+        options={{
+          title: "Screen Time",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="smartphone" size={size} color={color} />
           ),
         }}
       />

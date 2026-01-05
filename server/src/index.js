@@ -11,6 +11,7 @@ import sleepRoutes from './routes/sleep.js';
 import waterRoutes from './routes/water.js';
 import dashboardRoutes from './routes/dashboard.js';
 import analyticsRoutes from './routes/analytics.js';
+import screenTimeRoutes from './routes/screenTime.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/sleep', sleepRoutes);
 app.use('/api/water', waterRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/screen-time', screenTimeRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

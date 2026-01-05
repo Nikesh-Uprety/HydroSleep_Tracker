@@ -226,6 +226,42 @@ class ApiClient {
   async checkHealth() {
     return this.request<{ status: string; timestamp: string }>('/health');
   }
+
+  async syncScreenTime(entries: Array<{
+    packageName: string;
+    appName: string;
+    usageMs: number;
+    date: string;
+  }>) {
+    return this.request<{
+      success: boolean;
+      inserted: number;
+      modified: number;
+      matched: number;
+      totalProcessed: number;
+    }>('/screen-time/sync', {
+      method: 'POST',
+      body: JSON.stringify(entries),
+    });
+  }
+
+  async getScreenTimeSummary(startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request<{
+      startDate: string;
+      endDate: string;
+      dailyTotals: Record<string, number>;
+      appBreakdown: Array<{
+        packageName: string;
+        appName: string;
+        totalUsageMs: number;
+      }>;
+      totalEntries: number;
+    }>(`/screen-time/summary${query}`);
+  }
 }
 
 export const api = new ApiClient();

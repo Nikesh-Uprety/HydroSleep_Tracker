@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  backend:
+    build: ./server
+    container_name: hydrosleep_backend
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGODB_URI=mongodb+srv://upretynikesh021_db_user:yxEsUyrogRL96S8v@hydrosleep-tracker.yashtjz.mongodb.net/?appName=HydroSleep-Tracker
+      - NODE_ENV=production
